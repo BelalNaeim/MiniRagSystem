@@ -1,0 +1,79 @@
+### 1. Register User
+POST http://127.0.0.1:8000/api/v1/register
+Content-Type: application/json
+
+{
+  "name": "Test User",
+  "email": "test@example.com",
+  "password": "password123",
+  "password_confirmation": "password123"
+}
+
+###
+
+### 2. Login
+POST http://127.0.0.1:8000/api/v1/login
+Content-Type: application/json
+
+{
+  "email": "test@example.com",
+  "password": "password123"
+}
+
+###
+
+### 3. Upload PDF (Replace TOKEN with actual token from login)
+# Use Postman/Insomnia for file upload, or curl:
+# curl -X POST http://127.0.0.1:8000/api/v1/pdf/upload \
+#   -H "Authorization: Bearer YOUR_TOKEN" \
+#   -F "pdf=@path/to/file.pdf"
+
+POST http://127.0.0.1:8000/api/v1/pdf/upload
+Authorization: Bearer YOUR_TOKEN_HERE
+Content-Type: multipart/form-data
+
+# Add PDF file here using Postman/Insomnia
+
+###
+
+### 4. Chat Query - WebSocket (Replace TOKEN and pdf_id)
+POST http://127.0.0.1:8000/api/v1/chat/query
+Authorization: Bearer YOUR_TOKEN_HERE
+Content-Type: application/json
+
+{
+  "query": "What is this document about?",
+  "pdf_id": 3
+}
+
+###
+
+### 4b. Chat Query - Synchronous (Get answer directly)
+POST http://127.0.0.1:8000/api/v1/chat/query-sync
+Authorization: Bearer YOUR_TOKEN_HERE
+Content-Type: application/json
+
+{
+  "query": "What is this document about?",
+  "pdf_id": 3
+}
+
+###
+
+### 5. Debug Search (Test vector search)
+POST http://127.0.0.1:8000/api/v1/debug/search
+Authorization: Bearer YOUR_TOKEN_HERE
+Content-Type: application/json
+
+{
+  "query": "Laravel",
+  "pdf_id": 1
+}
+
+###
+
+### 6. Get User Info
+GET http://127.0.0.1:8000/api/v1/user
+Authorization: Bearer YOUR_TOKEN_HERE
+
+###
