@@ -486,12 +486,12 @@ php artisan broadcast:test {userId}
 
 ---
 
-## 📸 Screenshots
+## 📸 Screenshots & Demo
 
 ### 1. Authentication (Login)
 **Demonstrates:** Sanctum token-based authentication with successful login response.
 
-![Login Success - User authenticated and token generated](./docs/screenshots/01-auth-login.png)
+![Login Success](./public/images/screenshots/Screenshot%202026-01-31%20175038.png)
 
 *Response shows structured JSON with token, user data, and success message.*
 
@@ -500,38 +500,25 @@ php artisan broadcast:test {userId}
 ### 2. PDF Upload & Processing
 **Demonstrates:** File upload validation, text extraction, chunking, and embedding generation.
 
-![PDF Upload Response - File processed and chunks created](./docs/screenshots/02-pdf-upload.png)
+![PDF Upload Response](./public/images/screenshots/Screenshot%202026-01-31%20175141.png)
 
-*Shows successful PDF processing with chunk count and file metadata.*
-
----
-
-### 3. WebSocket Connection
-**Demonstrates:** Authenticated WebSocket connection to private channel.
-
-![WebSocket Connected - Pusher channel subscription successful](./docs/screenshots/03-websocket-connected.png)
-
-*Status shows "Connected" after successful authentication via Pusher.*
+*Shows successful PDF processing with chunk count and embeddings stored in Qdrant.*
 
 ---
 
-### 4. Real-time Chat Streaming (RAG)
-**Demonstrates:** Context retrieval, LLM generation, and real-time streaming response.
+### 3. Real-time Chat with RAG
+**Demonstrates:** Context retrieval from Qdrant, LLM generation, and real-time streaming response.
 
-![Chat Response - LLM answers based on PDF context](./docs/screenshots/04-chat-streaming.png)
+![Chat Response - WebSocket Streaming](./public/images/screenshots/Screenshot%202026-01-31%20175406.png)
 
-*Answer streams chunk-by-chunk, demonstrating:*
-- ✅ Vector search retrieval
-- ✅ Context building from chunks
-- ✅ LLM response generation
-- ✅ Real-time WebSocket streaming
+*Answer streams chunk-by-chunk via WebSocket, demonstrating:*
+- ✅ User authentication
+- ✅ WebSocket connection (Pusher)
+- ✅ Vector similarity search (Qdrant)
+- ✅ Context building from PDF chunks
+- ✅ LLM response generation (Ollama)
+- ✅ Real-time streaming to client
 - ✅ "Stream ended" confirmation
-
-> **Note:** Copy the 4 screenshot images from your test session to `docs/screenshots/` folder with the following names:
-> - `01-auth-login.png`
-> - `02-pdf-upload.png`
-> - `03-websocket-connected.png`
-> - `04-chat-streaming.png`
 
 ---
 
