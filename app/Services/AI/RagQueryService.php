@@ -4,6 +4,7 @@ namespace App\Services\AI;
 
 use App\Contracts\AI\EmbeddingProviderInterface;
 use App\Contracts\Vector\VectorStoreInterface;
+use App\Models\Chunk;
 
 class RagQueryService
 {
@@ -37,17 +38,50 @@ class RagQueryService
 
     public function buildContext(array $results): string
     {
-        $texts = [];
-
+        $chunkIds = [];
         foreach ($results as $item) {
             $payload = $item['payload'] ?? [];
-            $text = $payload['text'] ?? null;
-            if ($text) {
-                $texts[] = $text;
+            $chunkId = $payload['chunk_id'] ?? null;
+            if ($chunkId) {
+                $chunkIds[] = $chunkId;
             }
         }
 
-        return implode("\n---\n", $texts);
+        if (empty($chunkIds)) {
+            return '';
+        }
+
+        $chunks = Chunk::whereIn('id', $chunkIds)
+            ->orderBy('sort_order')
+            ->get();
+
+        $texts = [];
+        $processedChunks = [];
+
+        foreach ($chunks as $chunk) {
+            if (in_array($chunk->id, $processedChunks)) {
+                continue;
+            }
+
+            // Add main chunk
+            $texts[] = $chunk->content;
+            $processedChunks[] = $chunk->id;
+
+            // Get siblings (knit back like the reference)
+            $siblings = \App\Models\Chunk::where('pdf_id', $chunk->pdf_id)
+                ->whereIn('chunk_index', [$chunk->chunk_index - 1, $chunk->chunk_index + 1])
+                ->orderBy('chunk_index')
+                ->get();
+
+            foreach ($siblings as $sibling) {
+                if (!in_array($sibling->id, $processedChunks)) {
+                    $texts[] = $sibling->content;
+                    $processedChunks[] = $sibling->id;
+                }
+            }
+        }
+
+        return implode("\n\n---\n\n", $texts);
     }
 
     public function buildPrompt(string $query, string $context): string

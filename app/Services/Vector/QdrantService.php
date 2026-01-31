@@ -28,6 +28,8 @@ class QdrantService implements VectorStoreInterface
         $response = $this->client()->get("{$this->baseUrl}/collections/{$this->collection}");
 
         if ($response->successful()) {
+            // Collection exists, ensure indexes
+            $this->ensurePayloadIndexes();
             return;
         }
 
@@ -45,6 +47,25 @@ class QdrantService implements VectorStoreInterface
         if (!$create->successful()) {
             throw new \RuntimeException('Failed to create Qdrant collection.');
         }
+
+        // Create payload indexes after collection creation
+        $this->ensurePayloadIndexes();
+    }
+
+    protected function ensurePayloadIndexes(): void
+    {
+        // Create index for user_id
+        $this->client()->put("{$this->baseUrl}/collections/{$this->collection}/index", [
+            'field_name' => 'user_id',
+            'field_schema' => 'integer',
+        ]);
+
+        // Create index for pdf_id
+        $this->client()->put("{$this->baseUrl}/collections/{$this->collection}/index", [
+            'field_name' => 'pdf_id',
+            'field_schema' => 'integer',
+        ]);
+
     }
 
     public function upsert(array $points): void
@@ -56,7 +77,7 @@ class QdrantService implements VectorStoreInterface
         $response = $this->client()->put("{$this->baseUrl}/collections/{$this->collection}/points?wait=true", $payload);
 
         if (!$response->successful()) {
-            throw new \RuntimeException('Failed to upsert points into Qdrant.');
+            throw new \RuntimeException('Failed to upsert points into Qdrant: ' . $response->body());
         }
     }
 
@@ -65,6 +86,7 @@ class QdrantService implements VectorStoreInterface
         $payload = [
             'vector' => $vector,
             'limit' => $limit,
+            'with_payload' => true,
         ];
 
         if (!empty($filter)) {
@@ -74,7 +96,7 @@ class QdrantService implements VectorStoreInterface
         $response = $this->client()->post("{$this->baseUrl}/collections/{$this->collection}/points/search", $payload);
 
         if (!$response->successful()) {
-            throw new \RuntimeException('Failed to search Qdrant.');
+            throw new \RuntimeException('Failed to search Qdrant: ' . $response->body());
         }
 
         return $response->json('result') ?? [];

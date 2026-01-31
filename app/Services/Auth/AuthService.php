@@ -11,56 +11,44 @@ use Illuminate\Validation\ValidationException;
 
 class AuthService implements AuthServiceInterface
 {
-    public function register(string $model, array $data): array
+    public function register(array $data): array
     {
         DB::beginTransaction();
         try {
-            $user = $model::create($data);
+            $user = User::create($data);
+            $token = $user->login();
 
             DB::commit();
 
             return [
-                'key' => 'success',
-                'msg' => __('auth.registered'),
-                'user' => $this->getResource($model, $user, $user->login()),
+                'user' => UserResource::make($user)->setToken($token),
+                'token' => $token,
             ];
         } catch (\Exception $e) {
             DB::rollBack();
-            return [
-                'key' => 'fail',
-                'msg' => $e->getMessage(),
-            ];
+            throw $e;
         }
     }
 
-    public function login(string $model, array $data): array
+    public function login(array $data): array
     {
-        $user = $model::where('email', $data['email'])->first();
+        $user = User::where('email', $data['email'])->first();
 
         if (!$user || !Hash::check($data['password'], $user->password)) {
-            return [
-                'key' => 'fail',
-                'msg' => __(key: 'auth.incorrect_key_or_phone'),
-                'user' => []
-            ];
+            throw ValidationException::withMessages([
+                'email' => [__('auth.incorrect_key_or_phone')],
+            ]);
         }
 
+        $token = $user->login();
+
         return [
-            'key' => 'success',
-            'msg' => __('auth.login'),
-            'user' => $this->getResource($model, $user, $user->login()),
+            'user' => UserResource::make($user)->setToken($token),
+            'token' => $token,
         ];
     }
 
-    protected function getResource(string $model, $user, string $token = null)
-    {
-        return match($model) {
-            User::class => UserResource::make($user->refresh())->setToken($token),
-            default => $user,
-        };
-    }
-
-    public function logout(string $model, $user): bool
+    public function logout($user): bool
     {
         return $user->tokens()->delete();
     }

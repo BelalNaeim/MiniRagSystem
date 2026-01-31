@@ -24,12 +24,21 @@ class FileHandlerContoller extends Controller
         try {
             $result = $this->fileHandler->handleUpload($request->file('pdf'), $request->user());
 
+            $pdfData = $result['pdf']->toArray();
+            
+            // Ensure UTF-8 encoding
+            array_walk_recursive($pdfData, function (&$item) {
+                if (is_string($item)) {
+                    $item = mb_convert_encoding($item, 'UTF-8', 'UTF-8');
+                }
+            });
+
             return $this->response('success', 'File uploaded and processed successfully', [
-                'pdf' => $result['pdf'],
+                'pdf' => $pdfData,
                 'chunks_count' => count($result['chunks']),
             ]);
         } catch (\Exception $e) {
-            return $this->response('fail', $e->getMessage());
+            return $this->response('fail', 'Upload failed: ' . $e->getMessage());
         }
     }
 }

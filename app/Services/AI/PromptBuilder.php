@@ -1,4 +1,4 @@
-git<?php
+<?php
 
 namespace App\Services\AI;
 
@@ -7,11 +7,15 @@ class PromptBuilder
     public function build(string $question, string $context): string
     {
         return <<<PROMPT
-System: Answer using the provided context only. If the answer is not in the context, say you don't know.
+You are a helpful assistant. Answer the question based ONLY on the following context.
+If the answer cannot be found in the context, say "I don't have enough information to answer this question."
+
 Context:
 {$context}
-Question:
-{$question}
+
+Question: {$question}
+
+Answer:
 PROMPT;
     }
 }

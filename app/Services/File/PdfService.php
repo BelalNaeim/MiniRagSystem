@@ -5,6 +5,8 @@ namespace App\Services\File;
 use App\Contracts\AI\EmbeddingProviderInterface;
 use App\Contracts\File\FileHandlerInterface;
 use App\Contracts\Vector\VectorStoreInterface;
+use App\Domains\Chunking\TextChunker;
+use App\Models\Chunk;
 use App\Models\Pdf;
 use App\Traits\UploadTrait;
 use Illuminate\Http\UploadedFile;
@@ -40,7 +42,7 @@ class PdfService implements FileHandlerInterface
         ]);
 
         $text = $this->extractText(storage_path('app/public/' . $filePath));
-        $chunks = $this->chunkText($text);
+        $chunks = TextChunker::handle($text, 600, 100);
 
         if (empty($chunks)) {
             throw new \RuntimeException('PDF content is empty or unreadable.');
@@ -55,15 +57,33 @@ class PdfService implements FileHandlerInterface
         $this->vectorStore->ensureCollection(count($vectors[0]));
 
         $points = [];
-        foreach ($chunks as $index => $chunk) {
+        foreach ($chunks as $sectionNumber => $chunkContent) {
+            $guid = md5($chunkContent);
+            $vectorId = (string) Str::uuid();
+            
+            // Store chunk in MySQL (updateOrCreate like the reference)
+            $chunkModel = Chunk::updateOrCreate(
+                ['guid' => $guid],
+                [
+                    'pdf_id' => $pdf->id,
+                    'user_id' => $user->id,
+                    'content' => $chunkContent,
+                    'chunk_index' => $sectionNumber,
+                    'section_number' => $sectionNumber,
+                    'sort_order' => $sectionNumber + 1,
+                    'vector_id' => $vectorId,
+                ]
+            );
+
+            // Store vector in Qdrant
             $points[] = [
-                'id' => (string) Str::uuid(),
-                'vector' => $vectors[$index] ?? [],
+                'id' => $vectorId,
+                'vector' => $vectors[$sectionNumber] ?? [],
                 'payload' => [
                     'user_id' => $user->id,
                     'pdf_id' => $pdf->id,
-                    'chunk_index' => $index,
-                    'text' => $chunk,
+                    'chunk_index' => $sectionNumber,
+                    'chunk_id' => $chunkModel->id,
                 ],
             ];
         }
@@ -80,9 +100,15 @@ class PdfService implements FileHandlerInterface
     {
         try {
             $pdf = $this->parser->parseFile($filePath);
-            return $pdf->getText();
+            $text = $pdf->getText();
+            
+            // Clean and fix UTF-8 encoding
+            $text = mb_convert_encoding($text, 'UTF-8', 'UTF-8');
+            $text = preg_replace('/[^\x{0009}\x{000A}\x{000D}\x{0020}-\x{D7FF}\x{E000}-\x{FFFD}\x{10000}-\x{10FFFF}]+/u', '', $text);
+            
+            return $text;
         } catch (\Throwable $e) {
-            throw new \RuntimeException('Failed to parse PDF.');
+            throw new \RuntimeException('Failed to parse PDF: ' . $e->getMessage());
         }
     }
 

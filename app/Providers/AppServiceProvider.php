@@ -30,7 +30,11 @@ class AppServiceProvider extends ServiceProvider
         );
         $this->app->bind(
             \App\Contracts\AI\EmbeddingProviderInterface::class,
-            \App\Services\AI\OpenAiEmbeddingService::class
+            \App\Services\AI\OllamaEmbeddingService::class
+        );
+        $this->app->bind(
+            \App\Services\AI\OpenAiChatService::class,
+            \App\Services\AI\OpenAiChatService::class
         );
     }
 
