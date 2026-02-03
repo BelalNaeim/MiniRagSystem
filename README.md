@@ -497,17 +497,35 @@ php artisan broadcast:test {userId}
 
 ---
 
-### 2. PDF Upload & Processing
-**Demonstrates:** File upload validation, text extraction, chunking, and embedding generation.
+### 2. Connect WebSocket
+**Demonstrates:** Establishing WebSocket connection for real-time communication.
 
-![PDF Upload Response](./public/images/screenshots/Screenshot%202026-01-31%20175141.png)
+![WebSocket Connection](./public/images/screenshots/Screenshot%202026-01-31%20175141.png)
 
-*Shows successful PDF processing with chunk count and embeddings stored in Qdrant.*
+*WebSocket connection established via Pusher for real-time streaming.*
 
 ---
 
-### 3. Real-time Chat with RAG
-**Demonstrates:** Context retrieval from Qdrant, LLM generation, and real-time streaming response.
+### 3. File Upload (Postman)
+**Demonstrates:** PDF file upload via Postman with form-data, validation, text extraction, chunking, and embedding generation.
+
+![PDF Upload via Postman](./public/images/screenshots/Screenshot%202026-02-03%20195916.png)
+
+*Postman request showing form-data file upload with successful PDF processing response including chunk count and embeddings stored in Qdrant.*
+
+---
+
+### 4. Search/Retrieval (Debug Endpoint)
+**Demonstrates:** Vector similarity search using query and pdf_id to retrieve relevant chunks from Qdrant.
+
+![Search Results](./public/images/screenshots/Screenshot%202026-02-03%202016088.png)
+
+*Debug search endpoint showing query "linux" against pdf_id 9, returning matching chunks with relevance scores from the vector database.*
+
+---
+
+### 5. Chat Response
+**Demonstrates:** Context retrieval from Qdrant, LLM generation, and real-time streaming response via WebSocket.
 
 ![Chat Response - WebSocket Streaming](./public/images/screenshots/Screenshot%202026-01-31%20175406.png)
 
